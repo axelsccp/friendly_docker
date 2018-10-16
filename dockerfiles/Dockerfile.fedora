@@ -1,0 +1,12 @@
+FROM fedora:latest
+MAINTAINER Axel <apaschoabarres@gmail.com>
+LABEL Vendor="Fedora image" 
+
+COPY files_installation /playbook
+
+RUN yum -y install  https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-28.noarch.rpm \
+  && yum -y install wget ansible git
+
+RUN ansible-playbook -i localhost, -c local /playbook/install_inside_container.yaml
+
+ADD ./* /tmp/

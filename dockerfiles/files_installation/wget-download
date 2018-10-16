@@ -1,0 +1,2 @@
+wget http://mirror.centos.org/centos/6/os/x86_64/Packages/ImageMagick-devel-6.7.2.7-6.el6.i686.rpm 
+wget http://mirror.centos.org/centos/6/os/x86_64/Packages/ElectricFence-2.2.2-28.el6.x86_64.rpm 

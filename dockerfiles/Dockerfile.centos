@@ -1,0 +1,12 @@
+FROM centos:latest
+MAINTAINER Axel <apaschoabarres@gmail.com>
+LABEL Vendor="CentOS image" 
+
+COPY files_installation /playbook
+
+RUN rpm -ivh http://mirror.ci.ifes.edu.br/epel/7/x86_64/Packages/e/epel-release-7-11.noarch.rpm \
+  && yum -y install wget ansible git
+
+RUN ansible-playbook -i localhost, -c local /playbook/install_inside_container.yaml
+
+ADD ./* /tmp/

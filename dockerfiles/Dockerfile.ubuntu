@@ -1,0 +1,17 @@
+FROM ubuntu:latest
+MAINTAINER Axel <apaschoabarres@gmail.com>
+LABEL Vendor="Ubuntu image" 
+
+COPY files_installation /playbook
+
+RUN apt-get update -y
+
+RUN apt-get install -y python-pip \
+  && pip install --upgrade pip \
+  && pip2.7 install ansible
+
+RUN apt-get install -y wget net-tools git 
+
+RUN ansible-playbook -i localhost, -c local /playbook/install_inside_container.yaml
+
+ADD ./* /tmp/

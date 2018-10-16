@@ -1,0 +1,66 @@
+---
+- name: Build and run containers
+
+  hosts: all
+
+#  vars: 
+#    - ../vars/containers.yaml
+
+  vars:
+    - dockerfiles: "/home/ubuntu/scripts_tcc/dockerfiles"
+
+  tasks:
+#    - name: Faz o build das imagens
+#      shell: "docker build -t {{ item }}/rundeck -f {{ dockerfiles }}/Dockerfile.{{ item }} ."
+#        loop: os_images
+
+    - name: Check that the somefile.conf exists
+      stat:
+        path: ansible-galaxy-install 
+      register: ansible_galaxy
+
+    - name: Check that the somefile.conf exists
+      stat:
+        path: git_clone-download
+      register: git_clone
+
+    - name: Check that the somefile.conf exists
+      stat:
+        path: bin-install
+      register: bin_install
+
+    - name: Check that the somefile.conf exists
+      stat:
+        path: wget-download
+      register: wget_download
+
+    - name: recebe as imagens que passarão pelo build
+      command: cat git_clone-download
+      register: git
+      when: git_clone.stat.exists == True
+
+    - name: recebe as imagens que passarão pelo build
+      command: cat bin-install
+      register: bin
+      when: bin_install.stat.exists == True
+
+    - name: recebe as imagens que passarão pelo build
+      command: cat wget-download
+      register: wget
+      when: wget_download.stat.exists == True
+
+    - name: Faz o build das imagens junto do comando time caso gerado seja individual
+      shell: "{{ item }}" 
+      loop: "{{ git.stdout_lines }}"
+      when: git_clone.stat.exists == True
+
+    - name: Faz o build das imagens junto do comando time caso gerado seja individual
+      shell: "{{ item }}"
+      loop: "{{ bin.stdout_lines }}"
+      when: bin_install.stat.exists == True
+
+    - name: Faz o build das imagens junto do comando time caso gerado seja individual
+      shell: "{{ item }}"
+      loop: "{{ wget.stdout_lines }}"
+      when: wget_download.stat.exists == True
+

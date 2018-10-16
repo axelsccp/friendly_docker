@@ -1,0 +1,82 @@
+---
+- name: Build and run containers
+
+  hosts: all
+
+#  vars: 
+#    - ../vars/containers.yaml
+
+  vars:
+    - dockerfiles: "/home/ubuntu/scripts_tcc/dockerfiles"
+
+  tasks:
+#    - name: Faz o build das imagens
+#      shell: "docker build -t {{ item }}/rundeck -f {{ dockerfiles }}/Dockerfile.{{ item }} ."
+#        loop: os_images
+
+    - name: Count de imagens iniciadas
+      shell: wc -l os_type | awk '{ print $1 }'
+      register: count 
+
+    - name: mostra resultado do count
+      debug:
+        msg: "{{ count.stdout }}"
+
+    - name: recebe as imagens que passarão pelo build
+      command: cat os_type
+      register: versao
+
+    - name: mostra total de imagens
+      debug:
+        msg: "{{ item }}"
+      loop: "{{ versao.stdout_lines }}"
+
+    - name: Faz o build das imagens junto do comando time caso gerado seja individual
+      shell: /usr/bin/time -f "%e" docker build -t {{ item }}/rundeck -f Dockerfile.{{ item }} .
+      args: 
+        chdir: "{{ dockerfiles }}"
+      loop: "{{ versao.stdout_lines }}"
+      register: build_time
+      when:  count.stdout  == "1"
+
+    - name: Faz o build das imagens junto do time caso gerado de containers tenha sido executado como all
+      shell: /usr/bin/time -f "%e" docker build -t {{ item }}/rundeck -f {{ dockerfiles }}/Dockerfile.{{ item }} .
+      args:
+        chdir: "{{ dockerfiles }}"
+      loop: "{{ versao.stdout_lines }}"
+      register: build_time_all
+      when:  count.stdout  >= "2"
+
+    - name: mostra o build_time caso seja para todas as imagens
+      debug:
+        msg: "{{ item.stderr }}"
+      loop: "{{ build_time_all.results }}"
+      when:  count.stdout  >= "2"
+
+    - name: mostra o build_time caso seja individual
+      debug:
+        msg: "{{ item.stderr }}"
+      loop: "{{ build_time.results }}"
+      when:  count.stdout  == "1"
+
+    - name: remove build_time se o arquivo existir
+      file: 
+        path: /home/ubuntu/scripts_tcc/ansible/build_time
+        state: absent
+      ignore_errors: True
+
+    - name: Cria arquivo com os tempos de execução 
+      lineinfile:
+        dest: "/home/ubuntu/scripts_tcc/ansible/build_time"
+        line: "{{ item.0 }} {{ item.1.stderr }}"
+        create: yes
+      loop: "{{ versao.stdout_lines|zip(build_time.results)|list }}"
+      when:  count.stdout  == "1"
+
+    - name: Cria arquivo com os tempos de execução 
+      lineinfile:
+        dest: "/home/ubuntu/scripts_tcc/ansible/build_time"
+        line: "{{ item.0 }} {{ item.1.stderr }}"
+        create: yes
+      loop: "{{ versao.stdout_lines|zip(build_time_all.results)|list }}"
+      when:  count.stdout  >= "2"
